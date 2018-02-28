@@ -5,37 +5,37 @@
 		<title>Cubefield in JS</title>
 		<link rel="stylesheet" href="main.css">
         <!-- THREE.JS -->
-		<script src="Three.min.js"></script>
+		<script src="three/Three.min.js"></script>
         <!-- PASSES -->
-		<script src="postprocessing/EffectComposer.js"></script>
-		<script src="postprocessing/RenderPass.js"></script>
-		<script src="postprocessing/ShaderPass.js"></script>
-		<script src="postprocessing/MaskPass.js"></script> 
-		<script src="postprocessing/BloomPass.js"></script>
+		<script src="three/postprocessing/EffectComposer.js"></script>
+		<script src="three/postprocessing/RenderPass.js"></script>
+		<script src="three/postprocessing/ShaderPass.js"></script>
+		<script src="three/postprocessing/MaskPass.js"></script>
+		<script src="three/postprocessing/BloomPass.js"></script>
         <!-- SHADERS -->
-		<script src="shaders/CopyShader.js"></script>
-		<script src="shaders/BleachBypassShader.js"></script>
-		<script src="shaders/ColorifyShader.js"></script>
-		<script src="shaders/DotScreenShader.js"></script>
-		<script src="shaders/BrightnessContrastShader.js"></script>
-		<script src="shaders/ColorCorrectionShader.js"></script>
-		<script src="shaders/ConvolutionShader.js"></script>
-		<script src="shaders/FilmShader.js"></script>
-		<script src="shaders/FocusShader.js"></script>
-		<script src="shaders/HorizontalBlurShader.js"></script>
-		<script src="shaders/HueSaturationShader.js"></script>
-		<script src="shaders/KaleidoShader.js"></script>
-		<script src="shaders/LuminosityShader.js"></script>
-		<script src="shaders/MirrorShader.js"></script>
-		<script src="shaders/RGBShiftShader.js"></script>
-		<script src="shaders/SepiaShader.js"></script>
-		<script src="shaders/VerticalBlurShader.js"></script>
-		<script src="shaders/VignetteShader.js"></script>
+		<script src="three/shaders/CopyShader.js"></script>
+		<script src="three/shaders/BleachBypassShader.js"></script>
+		<script src="three/shaders/ColorifyShader.js"></script>
+		<script src="three/shaders/DotScreenShader.js"></script>
+		<script src="three/shaders/BrightnessContrastShader.js"></script>
+		<script src="three/shaders/ColorCorrectionShader.js"></script>
+		<script src="three/shaders/ConvolutionShader.js"></script>
+		<script src="three/shaders/FilmShader.js"></script>
+		<script src="three/shaders/FocusShader.js"></script>
+		<script src="three/shaders/HorizontalBlurShader.js"></script>
+		<script src="three/shaders/HueSaturationShader.js"></script>
+		<script src="three/shaders/KaleidoShader.js"></script>
+		<script src="three/shaders/LuminosityShader.js"></script>
+		<script src="three/shaders/MirrorShader.js"></script>
+		<script src="three/shaders/RGBShiftShader.js"></script>
+		<script src="three/shaders/SepiaShader.js"></script>
+		<script src="three/shaders/VerticalBlurShader.js"></script>
+		<script src="three/shaders/VignetteShader.js"></script>
         <!-- CLASSES -->
 		<script src="cubeClass.js"></script>
 	</head>
 	<body>
-        <button class="newGame" id="newGame" type="button" onclick="gameReset()">New Game</button> 
+    <button class="newGame" id="newGame" type="button" onclick="gameReset()">New Game</button>
         <div class="score" id="score">0.0</div>
         <div class="highscore">Highscore:<br><span id="highScore">15.0</span></div>
         <div class="instr">Use the left and right arrow keys to dodge the cubes.<br>See how far you can get without hitting any cubes.<br>Press P to pause.</div>
