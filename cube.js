@@ -37,8 +37,9 @@ class Cube {
 
     // Mesh
     this.mesh = new THREE.Mesh(cubeGeo, material);
+    this.mesh.castShadow = true;
     this.mesh.position.x = Math.random() * 12 - 6.0;
-    this.mesh.position.y = Math.random() * 2 + 0.5;
+    this.mesh.position.y = 0.06;
     this.mesh.position.z = Math.random() * -30.0;
     var edgeGeo = new THREE.EdgesGeometry(cubeGeo);
     this.edges = new THREE.LineSegments(edgeGeo, edgeMaterials[0]);
@@ -54,19 +55,10 @@ class Cube {
     this.opacity = 0.0;
   }
 
-  update (elapse, levelBreak, level, bounce, block, diff) {
-    var threshold = -20.0 * ( 1 + diff * 0.5 + level * 0.1 );
-
-    // Update opacity
-    // this.opacity = Math.min(1.0, (Math.max(this.mesh.position.z, -20) + 20) / 5 );
-    // this.mesh.material.opacity = this.opacity;
-    // this.edges.material.opacity = this.opacity;
-
+  update (rate, levelSpeed, triangle, levelBreak, level, bounce, block, diff) {
     // Update position
-    this.mesh.position.x += xSpeed * elapse * 6;
-
-    if (this.mesh.position.z > threshold) {
-      this.ySpeed += 0.005 * elapse * ( phase == -1 ? 3.0 : 1.0 );
+    if (this.mesh.position.z > triangle.position.z - Math.pow(levelSpeed, 1.2) * 150) {
+      this.ySpeed += 0.005 * rate * ( phase == -1 ? 3.0 : 1.0 );
       this.mesh.position.y -= this.ySpeed;
     }
 
@@ -76,23 +68,22 @@ class Cube {
     } else if (this.fromBelow && this.mesh.position.y > 0.06) {
       this.fromBelow = false;
     }
-    this.mesh.position.z += (1.0 + level * 0.2) * elapse * (0.7 + diff * 0.6);
 
     // Update edge position too
     this.edges.position.set(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z);
 
     // check collision
-    if (this.mesh.position.z > -0.03 &&
-        this.mesh.position.z < 0.5 &&
-        Math.abs( this.mesh.position.x ) < 0.06 &&
-        this.mesh.position.y < 0.09 && this.mesh.position.y > 0.03 )
+    if (Math.abs(this.mesh.position.z - triangle.position.z - 0.4) < 0.5 &&
+        Math.abs(this.mesh.position.x - triangle.position.x) < 0.055 &&
+        Math.abs(this.mesh.position.y - triangle.position.y - 0.06) < 0.03)
     {
       return true;
     }
     
     // Reset position once past screen
-    if (this.mesh.position.z > 1.0) {
-      this.resetPos(threshold, levelBreak, block);
+    if (this.mesh.position.z > triangle.position.z + 3.0) {
+      const threshold = triangle.position.z - 20.0 - level * 5 * diff - (this.mesh.position.z - triangle.position.z);
+      this.resetPos(triangle, threshold, levelBreak, block);
     }
 
     // Return if cube collided with player
@@ -100,7 +91,7 @@ class Cube {
   }
 
   // reset position after passes user
-  resetPos (threshold, levelBreak, block) {
+  resetPos (triangle, threshold, levelBreak, block) {
     this.fromBelow = block == 2;
     // this.opacity = 0.0;
     // this.mesh.material.opacity = 0.0;
@@ -108,7 +99,7 @@ class Cube {
     this.ySpeed = block == 2 ? -0.045 : 0;
     // Star further back if in break between levels
     this.mesh.position.z = threshold - (levelBreak > 0 ? 40 + Math.random() * 60 : 0);
-    this.mesh.position.x = Math.random() * 12.0 - 6.0;
+    this.mesh.position.x = triangle.position.x + Math.random() * 12.0 - 6.0;
     this.mesh.position.y = block == 0 ? 0.06 : block == 1 ? Math.random() * 4 + 0.5 : -1.0;
 
     // Update edge position too
@@ -123,7 +114,7 @@ class Cube {
     // this.mesh.material.opacity = 0.0;
     // this.edges.material.opacity = 0.0;
     this.ySpeed = block == 2 ? -0.045 : 0;
-    this.mesh.position.x = Math.random() * 12.0 - 6.0;
+    this.mesh.position.x = Math.random() * 64.0 - 32.0;
     this.mesh.position.y = block == 0 ? 0.06 : block == 1 ? Math.random() * 4 + 0.5 : -1.0;
     this.mesh.position.z = Math.random() * threshold + ( buffer ? threshold * 2 : 0.0 );
 

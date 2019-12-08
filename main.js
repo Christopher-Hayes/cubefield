@@ -1,13 +1,14 @@
-var camera, scene, renderer;
-var triangle; // the object the user controls("spaceship"), there is only one 'triangle' in CUBEfield!
+var camera, scene, renderer, spotlight;
+var triangle, triEdges; // the object the user controls("spaceship"), there is only one 'triangle' in CUBEfield!
 var plane; // ground landscape floor w/e
 var xSpeed; // x (side to side) speed of the triangle
+var zSpeed; // z speed of the triangle
 var zOffset; // position of triangle
 var camOffset; // camera offset is a little softer than xOffset
 var stars;
 var starSpeed;
-var numCubes = 100;
-var leftArrow, rightArrow;
+var numCubes = 120;
+var leftArrow, rightArrow, upArrow;
 var timeElapse;
 var cubeAdd; // need a way to add cubes at a steady rate
 var score;
@@ -50,31 +51,35 @@ function init() {
   totalElapse = 0;
 	zOffset = 0;
 	xSpeed = 0;
-  leftArrow = rightArrow = false;
+  zSpeed = 0;
+  leftArrow = rightArrow = upArrow = false;
 	mCubes = [];
 	starSpeed = [];
 	stars = [];
 
   // scene
 	scene = new THREE.Scene();
-	var light = new THREE.AmbientLight( 0xffffff ); // soft white light
-	scene.add( light );
+  scene.fog = new THREE.Fog(0xa3a3a3, 5, 25);
 
   // Renderer
 	renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setClearColor( 0xffffff, 0 );
+  renderer.setClearColor(0xffffff, 0);
   renderer.setSize( width, height );
-	document.body.appendChild( renderer.domElement );
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+	document.body.appendChild(renderer.domElement);
+
+  var ambient = new THREE.AmbientLight(0xffffff);
+  scene.add(ambient);
 
   // Camera
 	camera = new THREE.PerspectiveCamera( 15, width / height, 0.1, 1000 );
-  camera.position.x = 0;
-	camera.position.y = 0.25;  // 0.05   close-up
-	camera.position.z = 2.0;   // 0.40   close-up
+  camera.position.set(0, 0.25, 2.0);
 
 	// Ground plane
-	var ground = new THREE.PlaneBufferGeometry(300, 75, 20);
-	plane = new THREE.Mesh(ground, new THREE.MeshBasicMaterial({ color: 0xC8C8C8 }));
+	var planeGeo = new THREE.PlaneBufferGeometry(300, 75, 20);
+	plane = new THREE.Mesh(planeGeo, new THREE.MeshStandardMaterial({ color: 0xffffff }));
+  plane.receiveShadow = true;
 	plane.rotation.x += -0.5 * Math.PI;
 	plane.position.y = -0.001;
 	scene.add(plane);
@@ -99,13 +104,24 @@ function init() {
 	triGeo.faces.push( new THREE.Face3( 1, 2, 3 ) );
 	triGeo.faces.push( new THREE.Face3( 2, 0, 3 ) );
 	triangle = new THREE.Mesh(triGeo, new THREE.MeshBasicMaterial({ color: 0x646464 }));
+  triangle.castShadow = true;
 	triangle.position.y = -2.0;
 	scene.add(triangle);
 
   // player triangle - edges
   var edgeGeo = new THREE.EdgesGeometry(triGeo);
-	var edges = new THREE.LineSegments(edgeGeo, new THREE.MeshBasicMaterial({ color: 0x000000 }));
-	scene.add(edges);
+	triEdges = new THREE.LineSegments(edgeGeo, new THREE.MeshBasicMaterial({ color: 0x000000 }));
+	scene.add(triEdges);
+
+  spotlight = new THREE.SpotLight( 0xffffff);
+  spotlight.position.set(0, 100, 0);
+  spotlight.target = triangle;
+  spotlight.castShadow = true;
+  spotlight.shadow.camera.near = 0.1;
+  spotlight.shadow.camera.far = 20;
+  spotlight.shadow.mapSize.width = window.innerWidth;
+  spotlight.shadow.mapSize.height = window.innerHeight;
+  scene.add(spotlight);
 
 	// stars (level 2 background)
 	initStars();
@@ -159,13 +175,15 @@ function gameReset() {
   uiSettings.classList.remove( "settingsVis" );
   // Blur render
   document.querySelector('canvas').style.filter = 'blur(0px)';
+  document.querySelector('canvas').style.cursor = 'none';
     
 	score = 0;
 	// camOffset = 0;
 	timeElapse = new Date().getTime();
 	zOffset = 0;
 	xSpeed = 0;
-	triangle.position.y = 0.0;
+  zSpeed = 0;
+  camera.position.z = 0;
 
   // cubes
 	for( var c of mCubes ) {
@@ -194,6 +212,10 @@ function setPreGame() {
   uiSettings.classList.add( "settingsVis" );
   // Blur render
   document.querySelector('canvas').style.filter = 'blur(5px)';
+  document.querySelector('canvas').style.cursor = 'pointer';
+  // Triangle
+  triangle.material.color.setHex(0x646464);
+  triEdges.material.color.setHex(0x000000);
   
   // cubes
   for (var c of mCubes) {
@@ -202,6 +224,7 @@ function setPreGame() {
   
   level = 0;
   plane.material.color.setHex( 0xC8C8C8 );
+  scene.fog.color.setHex(0xA3A3A3);
 
   // hide stars
   for (var s of stars) {
@@ -225,11 +248,17 @@ function newLevel() {
 
 		case 0:
 			plane.material.color.setHex(0xC8C8C8);
-			document.body.style.backgroundColor = "#FFFFFF";
+      scene.fog.color.setHex(0xA3A3A3);
+      triangle.material.color.setHex(0x646464);
+      triEdges.material.color.setHex(0x000000);
+			document.body.style.backgroundColor = "#A3A3A3";
       break;
 
 		case 1:
 			plane.material.color.setHex(0x000000);
+      scene.fog.color.setHex(0x000000);
+      triangle.material.color.setHex(0x000000);
+      triEdges.material.color.setHex(0x00FF00);
 			document.body.style.backgroundColor = "#000000";
 
       // show stars
@@ -239,7 +268,10 @@ function newLevel() {
 			break;
 
 		case 2:
-			plane.material.color.setHex( 0x969696 );
+			plane.material.color.setHex(0x969696);
+      scene.fog.color.setHex(0x969696);
+      triangle.material.color.setHex(0x000000);
+      triEdges.material.color.setHex(0x000000);
 			document.body.style.backgroundColor = "#969696";
 
       // hide stars
@@ -249,12 +281,18 @@ function newLevel() {
 			break;
 
 		case 3:
-			plane.material.color.setHex( 0xffffff );
+			plane.material.color.setHex(0xffffff);
+      scene.fog.color.setHex(0xffffff);
+      triangle.material.color.setHex(0x646464);
+      triEdges.material.color.setHex(0x000000);
       document.body.style.backgroundColor = "#FFFFFF";
 			break;
 
 		case 4:
-			plane.material.color.setHex( 0x969696 );
+			plane.material.color.setHex(0x969696);
+      scene.fog.color.setHex(0x969696);
+      triangle.material.color.setHex(0xFF326C);
+      triEdges.material.color.setHex(0xFFFFFF);
       document.body.style.backgroundColor = "#969696";
 	}
 }
@@ -275,10 +313,35 @@ function animate() {
     // Pre-game
 		case -1:
 			// Demo mode in background
-      xSpeed *= 0.99;
-      camOffset *= 0.99;
-      camera.rotation.z += 0.0005;
-			updateCubes(rate * 0.2);
+      xSpeed *= 0.95;
+      zSpeed *= 0.95;
+      camOffset *= 0.95;
+
+      // Level speed
+      var levelSpeed = (level + 1) * rate * 0.5 + zSpeed;
+
+      // --- Camera -----------------------------------------------------------
+      // Camera rotation
+      camera.rotation.z = (camera.rotation.z + xSpeed * 1.5) * 0.7;
+      camera.rotation.z = Math.min(0.1, Math.max(-0.1, camera.rotation.z));
+
+      // Camera position
+      camera.position.x += xSpeed * rate * -10;
+      camera.position.z -= levelSpeed;
+
+      // Update player triangle and plane to match camera position
+      triangle.position.z = triEdges.position.z = plane.position.z = camera.position.z - 2.2;
+      triangle.position.x = triEdges.position.x = plane.position.x = camera.position.x;
+
+      // Update player triangle rotation to match camera rotation
+      triangle.rotation.y = camera.rotation.z;
+      triEdges.rotation.y = camera.rotation.z;
+
+      // Update spotlight
+      spotlight.position.set(triangle.position.x, triangle.position.y + 10, triangle.position.z);
+
+
+			updateCubes(rate * 0.2, levelSpeed);
 			break;
 
     // Pause
@@ -290,7 +353,7 @@ function animate() {
       // --- User Input -------------------------------------------------------
       if (!rightArrow && !leftArrow) {
         // No arrow key input
-        xSpeed *= 0.6 * rate;
+        xSpeed *= 0.8;
       } else {
         // Arrow key input
         if (leftArrow) {
@@ -301,27 +364,43 @@ function animate() {
         }
       }
       // Horizontal speed limits
-      xSpeed = Math.max( -0.02, Math.min( 0.02, xSpeed ));
+      xSpeed = Math.max(-0.5, Math.min(0.5, xSpeed));
+      // Forward speed
+      zSpeed = upArrow ? zSpeed + 0.025 * rate : zSpeed * 0.95;
+      zSpeed = Math.min(0.4, zSpeed);
 
-      // --- Z speed ----------------------------------------------------------
-      zOffset += 0.1 * elapse / 15;
+      // Level speed
+      var levelSpeed = (1 + level * 0.5) * rate * 0.5 * (1 + stnDiff * 1.5) + zSpeed + 0.05;
+
+      // --- Camera -----------------------------------------------------------
+      // Camera rotation
+      camera.rotation.z = (camera.rotation.z + xSpeed * 1.5) * 0.7;
+      camera.rotation.z = Math.min(0.1, Math.max(-0.1, camera.rotation.z));
+
+      // Camera position
+      camera.position.x += xSpeed * rate * -10;
+      camera.position.z -= levelSpeed;
+
+      // Update player triangle and plane to match camera position
+      triangle.position.z = triEdges.position.z = plane.position.z = camera.position.z + (stnCam == 0 ? -2.2 : (stnCam == 1 ? -1.2 : 0.2));
+      triangle.position.x = triEdges.position.x = plane.position.x = camera.position.x;
+
+      // Update player triangle rotation to match camera rotation
+      triangle.rotation.y = camera.rotation.z;
+      triEdges.rotation.y = camera.rotation.z;
+      triangle.rotation.z = camera.rotation.z * 2;
+      triEdges.rotation.z = camera.rotation.z * 2;
+      triangle.position.y = 0.01 - Math.abs(camera.rotation.z * 0.05);
+      triEdges.position.y = 0.01 - Math.abs(camera.rotation.z * 0.05);
+
+      // Update spotlight
+      spotlight.position.set(triangle.position.x, triangle.position.y + 10, triangle.position.z);
 
       // --- Scoring ----------------------------------------------------------
-      score = zOffset * ( 10 + level * 5 );
+      // score = zOffset * ( 10 + level * 5 );
       totalElapse += elapse;
       uiScore.innerHTML = (Math.round(totalElapse / 100) / 10).toString();
 
-      // --- Camera -----------------------------------------------------------
-      // Lean camera on left/right arrow
-      camOffset += xSpeed * 0.1;
-      if (!rightArrow && !leftArrow) {
-        camOffset /= 1.3;
-      }
-      camOffset = Math.min( 0.02, Math.max( -0.02, camOffset ));
-
-      // Camera rotation
-      rotStart *= 0.98;
-			camera.rotation.z = (camOffset / 0.03) * 0.05 * Math.PI + rotStart;
 
       // New level
 			if ((level + 1) * 30000 < totalElapse) {
@@ -334,21 +413,21 @@ function animate() {
 			}
 
 			// Update position of cubes + add cubes or remove cubes
-			updateCubes(elapse / 70);
+			updateCubes(rate, levelSpeed);
 	}
 
-  // Update stars
-	updateStars();
+  // Update stars (if on right level)
+  if (level % 5 == 1) {
+	  updateStars();
+  }
 
   // Render
   if (phase == 1) {
-    renderer.setClearColor( 0xffffff, 0 );
-    renderer.render( scene, camera );
+    renderer.setClearColor(0xffffff, 0);
   } else {
-    renderer.setClearColor( 0xa3a3a3, 1 );
-    renderer.render( scene, camera );
-    // composer.render();
+    renderer.setClearColor(0xa3a3a3, 1);
   }
+  renderer.render(scene, camera);
 }
 
 // --- UPDATE -----------------------------------------------------------------
@@ -373,16 +452,16 @@ function updateStars() {
 }
 
 // UPDATE cubes
-function updateCubes( elapse ) {
-	for( var c of mCubes ) {
-        var collision = c.update( elapse, levelBreak, level, stnBounce, stnBlock, stnDiff );
-        if( phase == 1 && collision ) {
-            logHighscore();
-            phase = -1;
-            setPreGame();
-            break;
-        }
+function updateCubes(rate, levelSpeed) {
+	for (var c of mCubes) {
+    var collision = c.update(rate, levelSpeed, triangle, levelBreak, level, stnBounce, stnBlock, stnDiff );
+    if (phase == 1 && collision) {
+      logHighscore();
+      phase = -1;
+      setPreGame();
+      return;
     }
+  }
 }
 
 // UPDATE camera position
@@ -400,7 +479,7 @@ function setCam() {
             break;
         case 2:
             camera.position.x = 0;
-            camera.position.y = 0.02;
+            camera.position.y = 0.025;
             camera.position.z = 0.0;
     }
 }
@@ -431,10 +510,12 @@ document.addEventListener('keydown', (e) => {
     var key = e.keyCode ? e.keyCode : e.which;
     if (key == 37 ) {
       leftArrow = true;
-    }else if ( key == 39 ) {
+    } else if ( key == 39 ) {
        rightArrow = true;
-    }else if ( key == 80 ) { // (p)ause
+    } else if ( key == 80 ) { // (p)ause
        pauseGameScreen();
+    } else if (key == 38) {
+      upArrow = true;
     }
   }
 });
@@ -445,12 +526,15 @@ document.addEventListener('keyup', (e) => {
     // touch input event
     rightArrow = false;
     leftArrow = false;
+    upArrow = false;
   } else {
     var key = e.keyCode ? e.keyCode : e.which;
     if (key == 37) {
       leftArrow = false;
     } else if (key == 39) {
       rightArrow = false;
+    } else if (key == 38) {
+      upArrow = false;
     }
   }
 });
