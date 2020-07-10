@@ -1,4 +1,4 @@
 # cubefield
 Cubefield clone using Three.JS
 
-Live at [hayeschris.com/proj/cubefield/index.html](https://hayeschris.com/proj/cubefield/index.html)
+Live at [christopher-hayes.github.io/cubefield](https://christopher-hayes.github.io/cubefield)
