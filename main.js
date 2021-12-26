@@ -90,19 +90,26 @@ function init() {
   }
 
 	// Player triangle
-	var triGeo = new THREE.Geometry();
+	var triGeo = new THREE.BufferGeometry();
 
-  // player triangle - vectors
-	triGeo.vertices.push(
-		new THREE.Vector3(  0.000, 0.000, -0.150 ),
-		new THREE.Vector3( -0.017, 0.000,  0.040 ),
+	// player triangle - vectors
+	let triGeoP = [
 		new THREE.Vector3(  0.017, 0.000,  0.040 ),
-		new THREE.Vector3(  0.000, 0.013,  0.020 )
-	);
-    // player triangle - push faces
-	triGeo.faces.push( new THREE.Face3( 3, 0, 1 ) );
-	triGeo.faces.push( new THREE.Face3( 1, 2, 3 ) );
-	triGeo.faces.push( new THREE.Face3( 2, 0, 3 ) );
+		new THREE.Vector3( -0.017, 0.000,  0.040 ),
+		new THREE.Vector3(  0.000, 0.000, -0.150 ),
+
+		new THREE.Vector3(  0.000, 0.000, -0.150 ),
+		new THREE.Vector3(  0.000, 0.013,  0.020 ),
+		new THREE.Vector3(  0.017, 0.000,  0.040 ),
+
+		new THREE.Vector3( -0.017, 0.000,  0.040 ),
+		new THREE.Vector3(  0.000, 0.013,  0.020 ),
+		new THREE.Vector3(  0.000, 0.000, -0.150 ),
+
+		new THREE.Vector3(  0.017, 0.000,  0.040 ),
+		new THREE.Vector3(  0.000, 0.013,  0.020 ),
+		new THREE.Vector3( -0.017, 0.000,  0.040 ),
+	];
 	triangle = new THREE.Mesh(triGeo, new THREE.MeshBasicMaterial({ color: 0x646464 }));
   triangle.castShadow = true;
 	triangle.position.y = -2.0;
@@ -198,7 +205,7 @@ function gameReset() {
   var k = Math.PI - ( this.camera.rotation.z % ( 2*Math.PI ));
   rotStart = ( Math.PI - Math.abs( k )) * Math.sign( k );
   totalElapse = 0;
-	phase = 1; 
+	phase = 1;
 }
 
 // Reset game upon finish
@@ -349,7 +356,7 @@ function animate() {
 			break;
 
     // In-game
-		case 1:  
+		case 1:
       // --- User Input -------------------------------------------------------
       if (!rightArrow && !leftArrow) {
         // No arrow key input
